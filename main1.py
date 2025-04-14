@@ -28,30 +28,32 @@ if st.button("Get Travel Info") and destination:
     os.environ["WEATHER_API_KEY"] = WEATHER_API_KEY
 
     # 🌤️ Custom weather tool
-    @tool
-    def get_weather(location: str) -> Dict[str, Any]:
-        """
-        Get current weather for a location.
-        """
-        try:
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={WEATHER_API_KEY}&units=metric"
-            response = requests.get(url)
-            data = response.json()
+   # 🌤️ Custom weather tool
+@tool
+def get_weather(location: str) -> Dict[str, Any]:
+    """
+    Get current weather for a location.
+    """
+    try:
+        # Updated weather API URL to work with WeatherAPI
+        url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={location}"
+        response = requests.get(url)
+        data = response.json()
 
-            if data.get("cod") != 200:
-                return {"error": data.get("message", "Location not found")}
+        if "error" in data:
+            return {"error": data["error"].get("message", "Location not found")}
 
-            weather = {
-                "location": location,
-                "temperature": data["main"]["temp"],
-                "description": data["weather"][0]["description"],
-                "humidity": data["main"]["humidity"],
-                "wind_speed": data["wind"]["speed"]
-            }
-            return weather
+        weather = {
+            "location": location,
+            "temperature": data["current"]["temp_c"],  # Temperature in Celsius
+            "description": data["current"]["condition"]["text"],
+            "humidity": data["current"]["humidity"],
+            "wind_speed": data["current"]["wind_kph"]  # Wind speed in km/h
+        }
+        return weather
 
-        except Exception as e:
-            return {"error": str(e)}
+    except Exception as e:
+        return {"error": str(e)}
 
     # 🔍 Tavily search tool
     search_tool = TavilySearch(max_results=3)
