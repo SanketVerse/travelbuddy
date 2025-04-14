@@ -2,11 +2,11 @@ import streamlit as st
 import os
 import requests
 from typing import Dict, Any
-from langchain_core.tools import tool
+from langchain.tools import tool  # Updated import
 from langchain_tavily import TavilySearch
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate
 
 # Set API keys directly
 GOOGLE_API_KEY = "AIzaSyDdZ3_8PHVaaVy2eURdU7fFiqctEnPhOwQ"
@@ -27,19 +27,21 @@ if st.button("Get Travel Info") and destination:
     os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
     os.environ["WEATHER_API_KEY"] = WEATHER_API_KEY
 
-    # 🌤️ Custom weather tool
+    # 🌤️ Custom weather tool with error handling
     @tool
     def get_weather(location: str) -> Dict[str, Any]:
         """
-        Get current weather for a location.
+        Get current weather for a location using OpenWeather API.
         """
         try:
             url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={WEATHER_API_KEY}&units=metric"
-            response = requests.get(url)
-            data = response.json()
+            response = requests.get(url, timeout=10)  # Timeout set to 10 seconds
+            
+            # Check if the response is successful
+            if response.status_code != 200:
+                return {"error": f"Error {response.status_code}: {response.json().get('message', 'Failed to fetch weather data')}"}
 
-            if data.get("cod") != 200:
-                return {"error": data.get("message", "Location not found")}
+            data = response.json()
 
             weather = {
                 "location": location,
@@ -50,8 +52,11 @@ if st.button("Get Travel Info") and destination:
             }
             return weather
 
+        except requests.exceptions.RequestException as e:
+            return {"error": f"Request failed: {str(e)}"}
+
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": f"An unexpected error occurred: {str(e)}"}
 
     # 🔍 Tavily search tool
     search_tool = TavilySearch(max_results=3)
@@ -81,5 +86,4 @@ if st.button("Get Travel Info") and destination:
         st.write(response["output"])
 
 elif st.button("Get Travel Info"):
-    st.warning("Please enter a destination.") 
-
+    st.warning("Please enter a destination.")
