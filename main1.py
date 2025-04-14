@@ -54,4 +54,3 @@ if st.button("Get Travel Info") and destination:
 
     # 🔍 Tavily + Gemini Setup
     search_tool = TavilySearch(max_results=3)
-    ll
