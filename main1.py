@@ -8,24 +8,24 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate
 
+# Set API keys directly
+GOOGLE_API_KEY = "AIzaSyDdZ3_8PHVaaVy2eURdU7fFiqctEnPhOwQ"
+TAVILY_API_KEY = "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"
+WEATHER_API_KEY = "367e01fcbd4941c6801101541251304"  # Your Weather API key
+
 st.set_page_config(page_title="Travel Assistant", page_icon="🌍")
 
 st.title("🌍 AI Travel Assistant")
-
-# 🔑 API Key Inputs
-google_api_key = st.text_input("🔐 Enter your Google API Key", type="password")
-tavily_api_key = st.text_input("🔐 Enter your Tavily API Key", type="password")
-weather_api_key = st.text_input("🔐 Enter your Weather API Key", type="password")
 
 # 🌍 Destination Input
 destination = st.text_input("📍 Where are you planning to go?")
 
 # When user clicks the button
-if st.button("Get Travel Info") and all([google_api_key, tavily_api_key, weather_api_key, destination]):
+if st.button("Get Travel Info") and destination:
     # Set environment variables
-    os.environ["GOOGLE_API_KEY"] = google_api_key
-    os.environ["TAVILY_API_KEY"] = tavily_api_key
-    WEATHER_API_KEY = weather_api_key
+    os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+    os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+    os.environ["WEATHER_API_KEY"] = WEATHER_API_KEY
 
     # 🌤️ Custom weather tool
     @tool
@@ -34,19 +34,19 @@ if st.button("Get Travel Info") and all([google_api_key, tavily_api_key, weather
         Get current weather for a location.
         """
         try:
-            url = f"http://api.weatherapi.com/v1/current.json?key={WEATHER_API_KEY}&q={location}"
+            url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={WEATHER_API_KEY}&units=metric"
             response = requests.get(url)
             data = response.json()
 
-            if "error" in data:
-                return {"error": data["error"].get("message", "Location not found")}
+            if data.get("cod") != 200:
+                return {"error": data.get("message", "Location not found")}
 
             weather = {
                 "location": location,
-                "temperature": data["current"]["temp_c"],  # Temperature in Celsius
-                "description": data["current"]["condition"]["text"],
-                "humidity": data["current"]["humidity"],
-                "wind_speed": data["current"]["wind_kph"]  # Wind speed in km/h
+                "temperature": data["main"]["temp"],
+                "description": data["weather"][0]["description"],
+                "humidity": data["main"]["humidity"],
+                "wind_speed": data["wind"]["speed"]
             }
             return weather
 
@@ -81,5 +81,5 @@ if st.button("Get Travel Info") and all([google_api_key, tavily_api_key, weather
         st.write(response["output"])
 
 elif st.button("Get Travel Info"):
-    st.warning("Please fill in all API keys and destination.")  # This will be shown if the button is clicked but not all fields are filled
+    st.warning("Please enter a destination.") 
 
