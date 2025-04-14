@@ -1,0 +1,10 @@
+streamlit>=1.31.0
+requests
+
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-tavily
+
+google-generativeai
