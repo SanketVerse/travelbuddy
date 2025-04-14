@@ -11,7 +11,7 @@ from langchain.prompts import ChatPromptTemplate
 # Set API keys directly
 GOOGLE_API_KEY = "AIzaSyDdZ3_8PHVaaVy2eURdU7fFiqctEnPhOwQ"
 TAVILY_API_KEY = "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"
-WEATHER_API_KEY = "367e01fcbd4941c6801101541251304"  # Your Weather API key
+WEATHER_API_KEY = "28bf071b06fe4f65bed130115251404"  # Your Weather API key
 
 st.set_page_config(page_title="Travel Assistant", page_icon="🌍")
 
